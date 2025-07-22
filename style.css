@@ -1,4 +1,31 @@
 /* 全体のスタイル */
+@media (max-width: 600px) {
+  li {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  li span {
+    margin-bottom: 5px;
+  }
+
+  li button {
+    width: 100%;
+    margin-top: 5px;
+  }
+
+  li input[type="checkbox"] {
+    margin-bottom: 5px;
+  }
+}
+
+
+.button-group {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
 body {
   font-family: sans-serif;
   background-color: #f9f9f9;
@@ -36,16 +63,17 @@ ul {
 
 li {
   display: flex;
-  flex-wrap: wrap; /* 🔴 折り返しを許可 */
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 5px;
+  gap: 8px; /* 上書きしたい場合はこちらに集約 */
   margin: 5px 0;
-  padding: 10px;
+  padding: 10px 8px; /* paddingも統一 */
   background-color: #fff;
   border: 1px solid #ccc;
-  word-break: break-word; /* 🔴 長い文字も折り返す */
+  word-break: break-word;
 }
+
 
 li span {
   flex: 1;

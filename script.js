@@ -123,6 +123,37 @@ function renderTask(todo, index) {
 
   const targetList = document.getElementById(`taskList-${todo.type}`);
   if (targetList) targetList.appendChild(li);
+  const upBtn = document.createElement("button");
+
+  upBtn.textContent = "↑";
+  upBtn.onclick = () => moveTask(todo.id, -1);
+
+  const downBtn = document.createElement("button");
+  downBtn.textContent = "↓";
+  downBtn.onclick = () => moveTask(todo.id, 1);
+  li.appendChild(upBtn);
+  li.appendChild(downBtn);
+}
+
+function moveTask(id, direction) {
+  const idx = todos.findIndex(t => t.id === id);
+  if (idx === -1) return;
+
+  const target = todos[idx];
+  const sameType = todos.filter(t => t.type === target.type);
+  const sameTypeIds = sameType.map(t => t.id);
+  const typeIdx = sameTypeIds.indexOf(id);
+
+  const newIdx = typeIdx + direction;
+  if (newIdx < 0 || newIdx >= sameType.length) return;
+
+  // 並び替え
+  [sameType[typeIdx], sameType[newIdx]] = [sameType[newIdx], sameType[typeIdx]];
+
+  // 全体のtodosを更新
+  todos = todos.filter(t => t.type !== target.type).concat(sameType);
+  saveTasks();
+  refreshTasks();
 }
 
 function refreshTasks() {
