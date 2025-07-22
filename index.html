@@ -1,9 +1,26 @@
-<!-- index.html（変更点だけ抜粋） -->
-<input type="text" id="taskInput" placeholder="やることを入力">
-<select id="taskType">
-  <option value="onetime">突発</option>
-  <option value="daily">毎日</option>
-  <option value="weekly">毎週</option>
-  <option value="monthly">毎月</option>
-</select>
-<button id="addBtn">追加</button>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>TODOアプリ</title>
+  <link rel="stylesheet" href="./style.css"> <!-- 🔴 ./ を忘れずに！ -->
+</head>
+<body>
+  <div class="container">
+    <h1>TODOリスト</h1>
+    
+    <input type="text" id="taskInput" placeholder="やることを入力">
+    <select id="taskType">
+      <option value="onetime">突発</option>
+      <option value="daily">毎日</option>
+      <option value="weekly">毎週</option>
+      <option value="monthly">毎月</option>
+    </select>
+    <button id="addBtn">追加</button>
+
+    <ul id="taskList"></ul>
+  </div>
+
+  <script src="./script.js"></script> <!-- 🔴 ./ を忘れずに！ -->
+</body>
+</html>
