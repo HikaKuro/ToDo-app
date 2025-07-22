@@ -74,7 +74,7 @@ function renderTask(todo) {
   const li = document.createElement("li");
 
   const span = document.createElement("span");
-  const today = getToday(); // 今日の日付
+  const today = getToday();
 
   const isDoneToday = todo.doneDates.includes(today);
   span.textContent = `${todo.text}（${typeToLabel(todo.type)}）`;
@@ -83,7 +83,6 @@ function renderTask(todo) {
     span.style.color = "#888";
   }
 
-  // 完了ボタン
   const doneBtn = document.createElement("button");
   doneBtn.textContent = isDoneToday ? "完了済" : "完了";
   doneBtn.disabled = isDoneToday;
@@ -91,24 +90,30 @@ function renderTask(todo) {
     if (!todo.doneDates.includes(today)) {
       todo.doneDates.push(today);
       saveTasks();
-      refreshTasks(); // 再描画して反映
+      refreshTasks();
     }
   };
 
-  // 削除ボタン
   const delBtn = document.createElement("button");
   delBtn.textContent = "削除";
   delBtn.onclick = () => {
     todos = todos.filter(t => t.id !== todo.id);
-    li.remove();
     saveTasks();
+    refreshTasks();
   };
 
   li.appendChild(span);
   li.appendChild(doneBtn);
   li.appendChild(delBtn);
-  taskList.appendChild(li);
+
+  // 👇 タイプに応じてリストに追加
+  const listId = `${todo.type}List`;
+  const targetList = document.getElementById(listId);
+  if (targetList) {
+    targetList.appendChild(li);
+  }
 }
+
 
 // 👉 新しいタスクを追加する関数です。
 function addTask(text, type) {
@@ -150,13 +155,14 @@ function getToday() {
 }
 
 function refreshTasks() {
-  taskList.innerHTML = "";
-  todos.forEach(todo => {
-    if (shouldShowToday(todo)) {
-      renderTask(todo);
-    }
+  ["onetimeList", "dailyList", "weeklyList", "monthlyList"].forEach(id => {
+    const ul = document.getElementById(id);
+    if (ul) ul.innerHTML = "";
   });
+
+  todos.forEach(todo => renderTask(todo));
 }
+
 
 
 loadTasks();

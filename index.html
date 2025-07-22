@@ -8,7 +8,7 @@
 <body>
   <div class="container">
     <h1>TODOリスト</h1>
-    
+
     <input type="text" id="taskInput" placeholder="やることを入力">
     <select id="taskType">
       <option value="onetime">突発</option>
@@ -18,9 +18,20 @@
     </select>
     <button id="addBtn">追加</button>
 
-    <ul id="taskList"></ul>
+    <h2>突発タスク</h2>
+    <ul id="onetimeList"></ul>
+
+    <h2>毎日タスク</h2>
+    <ul id="dailyList"></ul>
+
+    <h2>毎週タスク</h2>
+    <ul id="weeklyList"></ul>
+
+    <h2>毎月タスク</h2>
+    <ul id="monthlyList"></ul>
   </div>
 
-  <script src="./script.js"></script> <!-- 🔴 ./ を忘れずに！ -->
+  <script src="./script.js"></script>
 </body>
+
 </html>
