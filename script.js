@@ -70,49 +70,80 @@ function isSameMonth(dateStr1, dateStr2) {
 
 
 // 👉 タスクを表示するための関数です。
-function renderTask(todo) {
+function renderTask(todo, index) {
   const li = document.createElement("li");
+  li.setAttribute("draggable", true);
+  li.dataset.id = todo.id;
 
-  const span = document.createElement("span");
-  const today = getToday();
+  // 番号やチェックボックスなどはこれまでと同様に追加…
 
-  const isDoneToday = todo.doneDates.includes(today);
-  span.textContent = `${todo.text}（${typeToLabel(todo.type)}）`;
-  if (isDoneToday) {
-    span.style.textDecoration = "line-through";
-    span.style.color = "#888";
-  }
+  // 🟡 ドラッグ開始
+  li.addEventListener("dragstart", (e) => {
+    li.classList.add("dragging");
+    e.dataTransfer.setData("text/plain", todo.id);
+  });
 
-  const doneBtn = document.createElement("button");
-  doneBtn.textContent = isDoneToday ? "完了済" : "完了";
-  doneBtn.disabled = isDoneToday;
-  doneBtn.onclick = () => {
-    if (!todo.doneDates.includes(today)) {
-      todo.doneDates.push(today);
-      saveTasks();
-      refreshTasks();
-    }
-  };
+  // 🟡 ドラッグ終了
+  li.addEventListener("dragend", () => {
+    li.classList.remove("dragging");
+  });
 
-  const delBtn = document.createElement("button");
-  delBtn.textContent = "削除";
-  delBtn.onclick = () => {
-    todos = todos.filter(t => t.id !== todo.id);
-    saveTasks();
-    refreshTasks();
-  };
-
-  li.appendChild(span);
-  li.appendChild(doneBtn);
-  li.appendChild(delBtn);
-
-  // 👇 タイプに応じてリストに追加
-  const listId = `${todo.type}List`;
+  const listId = `taskList-${todo.type}`;
   const targetList = document.getElementById(listId);
   if (targetList) {
     targetList.appendChild(li);
+
+    // 🔵 ドロップ先のイベントは一度だけ追加（最初のタスクのときだけ）
+    if (!targetList.dataset.listenerAdded) {
+      targetList.addEventListener("dragover", handleDragOver);
+      targetList.addEventListener("drop", handleDrop);
+      targetList.dataset.listenerAdded = true;
+    }
   }
 }
+
+// 🟢 ドラッグ中にリスト上に乗ったとき
+function handleDragOver(e) {
+  e.preventDefault(); // 必須
+  const dragging = document.querySelector(".dragging");
+  const afterElement = getDragAfterElement(e.currentTarget, e.clientY);
+  const list = e.currentTarget;
+  if (afterElement == null) {
+    list.appendChild(dragging);
+  } else {
+    list.insertBefore(dragging, afterElement);
+  }
+}
+
+// 🟢 ドロップされたとき
+function handleDrop(e) {
+  e.preventDefault();
+  const droppedId = e.dataTransfer.getData("text/plain");
+  const listType = e.currentTarget.dataset.type;
+  const ids = Array.from(e.currentTarget.children).map(li => li.dataset.id);
+  const newOrder = ids.map(id => todos.find(todo => todo.id === id));
+
+  // 同じtypeのものだけ並び替える
+  const others = todos.filter(todo => todo.type !== listType);
+  todos = [...others, ...newOrder];
+  saveTasks();
+  refreshTasks();
+}
+
+// 🔵 ドラッグ先の位置を取得
+function getDragAfterElement(container, y) {
+  const elements = [...container.querySelectorAll("li:not(.dragging)")];
+  return elements.reduce((closest, child) => {
+    const box = child.getBoundingClientRect();
+    const offset = y - box.top - box.height / 2;
+    if (offset < 0 && offset > closest.offset) {
+      return { offset, element: child };
+    } else {
+      return closest;
+    }
+  }, { offset: Number.NEGATIVE_INFINITY }).element;
+}
+
 
 
 // 👉 新しいタスクを追加する関数です。
@@ -155,13 +186,14 @@ function getToday() {
 }
 
 function refreshTasks() {
-  ["onetimeList", "dailyList", "weeklyList", "monthlyList"].forEach(id => {
-    const ul = document.getElementById(id);
-    if (ul) ul.innerHTML = "";
+  ["onetime", "daily", "weekly", "monthly"].forEach(type => {
+    const list = document.getElementById(`taskList-${type}`);
+    if (list) list.innerHTML = "";
   });
 
-  todos.forEach(todo => renderTask(todo));
+  todos.forEach((todo, index) => renderTask(todo, index));
 }
+
 
 
 

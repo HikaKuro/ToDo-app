@@ -7,7 +7,7 @@
 </head>
 <body>
   <div class="container">
-    <h1>TODOリスト</h1>
+    <h1>Atomic Habit Lists</h1>
 
     <input type="text" id="taskInput" placeholder="やることを入力">
     <select id="taskType">
@@ -19,16 +19,16 @@
     <button id="addBtn">追加</button>
 
     <h2>突発タスク</h2>
-    <ul id="onetimeList"></ul>
+    <ul id="taskList-onetime" class="task-list" data-type="onetime"></ul>
 
     <h2>毎日タスク</h2>
-    <ul id="dailyList"></ul>
+    <ul id="taskList-daily" class="task-list" data-type="daily"></ul>
 
     <h2>毎週タスク</h2>
-    <ul id="weeklyList"></ul>
+    <ul id="taskList-weekly" class="task-list" data-type="weekly"></ul>
 
     <h2>毎月タスク</h2>
-    <ul id="monthlyList"></ul>
+    <ul id="taskList-monthly" class="task-list" data-type="monthly"></ul>
   </div>
 
   <script src="./script.js"></script>
