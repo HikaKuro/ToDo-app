@@ -237,5 +237,3 @@ window.addEventListener('DOMContentLoaded', () => {
   initChart();
   loadTasks();  // この中や refreshTasks() の末尾で updateChart(todos) を呼ぶ想定
 });
-
-loadTasks();
