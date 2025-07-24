@@ -1,101 +1,26 @@
 /* 全体のスタイル */
 @media (max-width: 600px) {
-  li {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  li span {
-    margin-bottom: 5px;
-  }
-
-  li button {
-    width: 100%;
-    margin-top: 5px;
-  }
-
-  li input[type="checkbox"] {
-    margin-bottom: 5px;
-  }
+  li { flex-direction: column; align-items: stretch; }
+  li span, li input, li button { width: 100%; margin-bottom: 5px; }
 }
 
+.button-group,
+li { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
 
-.button-group {
-  display: flex;
-  gap: 5px;
-  flex-wrap: wrap;
-}
+body { font-family: sans-serif; background-color: #f9f9f9; padding: 20px; margin: 0; }
+.container { max-width: 600px; margin: 0 auto; padding: 0 15px; }
 
-body {
-  font-family: sans-serif;
-  background-color: #f9f9f9;
-  padding: 20px;
-  margin: 0;
-}
+input, select, button { padding: 10px; margin: 5px 5px 10px 0; font-size: 16px; }
+input[type="text"] { width: 60%; max-width: 300px; }
+button { cursor: pointer; }
 
-.container {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: 0 15px;
-}
+ul { list-style: none; padding: 0; }
+li { background: #fff; border: 1px solid #ccc; padding: 10px; word-break: break-word; }
+li span { flex: 1; min-width: 120px; }
 
-/* 入力フォーム */
-input, select, button {
-  padding: 10px;
-  margin: 5px 5px 10px 0;
-  font-size: 16px;
-}
+li.dragging { opacity: 0.5; }
 
-input[type="text"] {
-  width: 60%;
-  max-width: 300px;
-}
+h1 { font-size: 24px; margin-bottom: 20px; }
+h2 { font-size: 18px; margin-top: 25px; }
 
-button {
-  cursor: pointer;
-}
-
-/* タスクリスト */
-ul {
-  list-style: none;
-  padding: 0;
-}
-
-li {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px; /* 上書きしたい場合はこちらに集約 */
-  margin: 5px 0;
-  padding: 10px 8px; /* paddingも統一 */
-  background-color: #fff;
-  border: 1px solid #ccc;
-  word-break: break-word;
-}
-
-
-li span {
-  flex: 1;
-  min-width: 120px;
-}
-
-li button, li input[type="checkbox"] {
-  flex-shrink: 0;
-}
-
-/* ドラッグ中 */
-li.dragging {
-  opacity: 0.5;
-}
-
-/* ヘッダー */
-h1 {
-  font-size: 24px;
-  margin-bottom: 20px;
-}
-
-h2 {
-  font-size: 18px;
-  margin-top: 25px;
-}
+canvas { margin-top: 10px; background: #fff; border: 1px solid #ccc; }

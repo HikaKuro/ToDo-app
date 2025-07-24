@@ -3,6 +3,7 @@ const addBtn = document.getElementById("addBtn");
 const typeSelect = document.getElementById("taskType");
 
 let todos = [];
+let completedChart = null;
 
 function saveTasks() {
   localStorage.setItem("todos", JSON.stringify(todos));
@@ -11,7 +12,6 @@ function saveTasks() {
 input.addEventListener("keypress", (e) => {
   if (e.key === "Enter") addBtn.click();
 });
-
 
 function loadTasks() {
   const data = JSON.parse(localStorage.getItem("todos"));
@@ -22,36 +22,54 @@ function loadTasks() {
     }));
     refreshTasks();
   }
-  ["onetime", "daily", "weekly", "monthly"].forEach(type => {
-  const list = document.getElementById(`taskList-${type}`);
-  if (list) {
-    list.addEventListener("dragover", handleDragOver);
-    list.addEventListener("drop", handleDrop);
-  }
-});
 
+  // ドラッグ＆ドロップ設定
+  ["onetime", "daily", "weekly", "monthly"].forEach(type => {
+    const list = document.getElementById(`taskList-${type}`);
+    if (list) {
+      list.addEventListener("dragover", handleDragOver);
+      list.addEventListener("drop", handleDrop);
+    }
+  });
+
+  initChart();
+}
+
+function initChart() {
+  const ctx = document.getElementById('completedChart').getContext('2d');
+  completedChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: [],
+      datasets: [{
+        label: '完了タスク数',
+        data: []
+      }]
+    },
+    options: {
+      scales: {
+        x: { title: { display: true, text: '日付' } },
+        y: { title: { display: true, text: '数' }, beginAtZero: true }
+      }
+    }
+  });
 }
 
 function getToday() {
-  const d = new Date();
-  return d.toISOString().split("T")[0];
+  return new Date().toISOString().split("T")[0];
 }
 
-function isSameWeek(dateStr1, dateStr2) {
-  const d1 = new Date(dateStr1);
-  const d2 = new Date(dateStr2);
-  const startOfWeek = date => {
-    const d = new Date(date);
-    d.setDate(d.getDate() - d.getDay());
-    return d.toDateString();
-  };
-  return startOfWeek(d1) === startOfWeek(d2);
+function isSameWeek(d1, d2) {
+  const date1 = new Date(d1);
+  const date2 = new Date(d2);
+  const start = dt => { const d = new Date(dt); d.setDate(d.getDate() - d.getDay()); return d.toDateString(); };
+  return start(date1) === start(date2);
 }
 
-function isSameMonth(dateStr1, dateStr2) {
-  const d1 = new Date(dateStr1);
-  const d2 = new Date(dateStr2);
-  return d1.getFullYear() === d2.getFullYear() && d1.getMonth() === d2.getMonth();
+function isSameMonth(d1, d2) {
+  const date1 = new Date(d1);
+  const date2 = new Date(d2);
+  return date1.getFullYear() === date2.getFullYear() && date1.getMonth() === date2.getMonth();
 }
 
 function shouldShowToday(todo) {
@@ -61,22 +79,17 @@ function shouldShowToday(todo) {
     case "daily":
       return !todo.doneDates.includes(today);
     case "weekly":
-      return !todo.doneDates.some(date => isSameWeek(date, today));
+      return !todo.doneDates.some(d => isSameWeek(d, today));
     case "monthly":
-      return !todo.doneDates.some(date => isSameMonth(date, today));
+      return !todo.doneDates.some(d => isSameMonth(d, today));
     default:
       return true;
   }
 }
 
 function typeToLabel(type) {
-  switch (type) {
-    case "onetime": return "突発";
-    case "daily": return "毎日";
-    case "weekly": return "毎週";
-    case "monthly": return "毎月";
-    default: return "";
-  }
+  const map = { onetime: '突発', daily: '毎日', weekly: '毎週', monthly: '毎月' };
+  return map[type] || '';
 }
 
 function renderTask(todo, index) {
@@ -88,22 +101,30 @@ function renderTask(todo, index) {
   li.classList.add("draggable");
 
   const today = getToday();
-  const isDoneToday = todo.doneDates.includes(today);
-
-  const span = document.createElement("span");
-  span.textContent = `${index + 1}. ${todo.text}（${typeToLabel(todo.type)}）`;
-  if (isDoneToday) {
-    span.style.textDecoration = "line-through";
-    span.style.color = "#888";
-  }
+  const done = todo.doneDates.includes(today);
 
   const checkbox = document.createElement("input");
   checkbox.type = "checkbox";
-  checkbox.checked = isDoneToday;
-  checkbox.disabled = isDoneToday;
+  checkbox.checked = done;
+  checkbox.disabled = false;
   checkbox.onclick = () => {
-    if (!isDoneToday) {
+    if (!done) {
       todo.doneDates.push(today);
+      saveTasks();
+      refreshTasks();
+    }
+  };
+
+  const span = document.createElement("span");
+  span.textContent = `${index + 1}. ${todo.text}（${typeToLabel(todo.type)}）`;
+  if (done) span.style.textDecoration = "line-through";
+
+  const editBtn = document.createElement("button");
+  editBtn.textContent = "編集";
+  editBtn.onclick = () => {
+    const newText = prompt("タスクを編集", todo.text);
+    if (newText !== null) {
+      todo.text = newText.trim();
       saveTasks();
       refreshTasks();
     }
@@ -117,160 +138,95 @@ function renderTask(todo, index) {
     refreshTasks();
   };
 
-  li.appendChild(checkbox);
-  li.appendChild(span);
-  li.appendChild(delBtn);
+  const upBtn = document.createElement("button"); upBtn.textContent = "↑"; upBtn.onclick = () => moveTask(todo.id, -1);
+  const downBtn = document.createElement("button"); downBtn.textContent = "↓"; downBtn.onclick = () => moveTask(todo.id, 1);
 
-  const targetList = document.getElementById(`taskList-${todo.type}`);
-  if (targetList) targetList.appendChild(li);
-  const upBtn = document.createElement("button");
+  [checkbox, span, editBtn, delBtn, upBtn, downBtn].forEach(el => li.appendChild(el));
 
-  upBtn.textContent = "↑";
-  upBtn.onclick = () => moveTask(todo.id, -1);
-
-  const downBtn = document.createElement("button");
-  downBtn.textContent = "↓";
-  downBtn.onclick = () => moveTask(todo.id, 1);
-  li.appendChild(upBtn);
-  li.appendChild(downBtn);
-}
-
-function moveTask(id, direction) {
-  const idx = todos.findIndex(t => t.id === id);
-  if (idx === -1) return;
-
-  const target = todos[idx];
-  const sameType = todos.filter(t => t.type === target.type);
-  const sameTypeIds = sameType.map(t => t.id);
-  const typeIdx = sameTypeIds.indexOf(id);
-
-  const newIdx = typeIdx + direction;
-  if (newIdx < 0 || newIdx >= sameType.length) return;
-
-  // 並び替え
-  [sameType[typeIdx], sameType[newIdx]] = [sameType[newIdx], sameType[typeIdx]];
-
-  // 全体のtodosを更新
-  todos = todos.filter(t => t.type !== target.type).concat(sameType);
-  saveTasks();
-  refreshTasks();
+  document.getElementById(`taskList-${todo.type}`).appendChild(li);
 }
 
 function refreshTasks() {
-  // 通常タスクリストを初期化
+  // クリア
   ["onetime", "daily", "weekly", "monthly"].forEach(type => {
-    const list = document.getElementById(`taskList-${type}`);
-    if (list) list.innerHTML = "";
+    document.getElementById(`taskList-${type}`).innerHTML = '';
   });
-
-  // 完了タスクリストも初期化
   const completedList = document.getElementById("completedTasks");
-  if (completedList) completedList.innerHTML = "";
+  completedList.innerHTML = '';
 
-  ["onetime", "daily", "weekly", "monthly"].forEach(type => {
-    const typeTodos = todos.filter(todo => todo.type === type);
-    typeTodos.forEach((todo, idx) => {
-      const today = getToday();
-      const isDoneToday = todo.doneDates.includes(today) ||
-        (todo.type === "weekly" && todo.doneDates.some(date => isSameWeek(date, today))) ||
-        (todo.type === "monthly" && todo.doneDates.some(date => isSameMonth(date, today)));
+  // 通常と完了リスト描画
+  todos.forEach((todo, idx) => {
+    const today = getToday();
+    const doneToday = (todo.type === 'weekly'
+      ? todo.doneDates.some(d => isSameWeek(d, today))
+      : todo.type === 'monthly'
+        ? todo.doneDates.some(d => isSameMonth(d, today))
+        : todo.doneDates.includes(today));
 
-      if (shouldShowToday(todo)) {
-        renderTask(todo, idx);
-      } else if (completedList && isDoneToday) {
-        // 完了タスクとして表示
-        const li = document.createElement("li");
-        li.textContent = `${todo.text}（${typeToLabel(todo.type)}）✔`;
-        li.style.textDecoration = "line-through";
-        li.style.color = "#888";
-        completedList.appendChild(li);
-      }
-    });
+    if (shouldShowToday(todo)) {
+      renderTask(todo, idx);
+    } else if (doneToday) {
+      const li = document.createElement('li');
+      li.textContent = `${todo.text}（${typeToLabel(todo.type)}）`;
+      li.style.textDecoration = 'line-through';
+
+      const undoBtn = document.createElement('button');
+      undoBtn.textContent = '戻す';
+      undoBtn.onclick = () => {
+        if (todo.type === 'weekly') todo.doneDates = todo.doneDates.filter(d => !isSameWeek(d, today));
+        else if (todo.type === 'monthly') todo.doneDates = todo.doneDates.filter(d => !isSameMonth(d, today));
+        else todo.doneDates = todo.doneDates.filter(d => d !== today);
+        saveTasks(); refreshTasks();
+      };
+
+      li.appendChild(undoBtn);
+      completedList.appendChild(li);
+    }
   });
+
+  // グラフ更新
+  if (completedChart) {
+    const counts = {};
+    todos.forEach(todo => {
+      todo.doneDates.forEach(d => counts[d] = (counts[d] || 0) + 1);
+    });
+    const labels = Object.keys(counts).sort();
+    completedChart.data.labels = labels;
+    completedChart.data.datasets[0].data = labels.map(d => counts[d]);
+    completedChart.update();
+  }
 }
 
-
 function addTask(text, type) {
-  const todo = {
-    id: Date.now().toString(),
-    text,
-    type,
-    doneDates: []
-  };
-  todos.push(todo);
+  todos.push({ id: Date.now().toString(), text, type, doneDates: [] });
   saveTasks();
   refreshTasks();
 }
 
 addBtn.onclick = () => {
   const text = input.value.trim();
-  const type = typeSelect.value;
-  if (text) {
-    addTask(text, type);
-    input.value = "";
-    typeSelect.value = "onetime";
-  }
+  if (!text) return;
+  addTask(text, typeSelect.value);
+  input.value = '';
+  typeSelect.value = 'onetime';
 };
 
-// --- ドラッグ操作のイベントリスナー ---
-document.addEventListener("dragstart", (e) => {
-  if (e.target.classList.contains("draggable")) {
-    e.target.classList.add("dragging");
-  }
-});
-
-document.addEventListener("dragend", (e) => {
-  if (e.target.classList.contains("draggable")) {
-    e.target.classList.remove("dragging");
-  }
-});
-
-function handleDragOver(e) {
-  e.preventDefault();
-  const dragging = document.querySelector(".dragging");
-  const afterElement = getDragAfterElement(e.currentTarget, e.clientY);
-  if (afterElement == null) {
-    e.currentTarget.appendChild(dragging);
-  } else {
-    e.currentTarget.insertBefore(dragging, afterElement);
-  }
+// ドラッグ＆ドロップ
+document.addEventListener("dragstart", e => { if (e.target.classList.contains("draggable")) e.target.classList.add("dragging"); });
+document.addEventListener("dragend", e => { if (e.target.classList.contains("dragging")) e.target.classList.remove("dragging"); });
+function handleDragOver(e) { e.preventDefault(); const dragging = document.querySelector(".dragging"); const after = getDragAfterElement(e.currentTarget, e.clientY); if (!after) e.currentTarget.appendChild(dragging); else e.currentTarget.insertBefore(dragging, after); }
+function handleDrop(e) { e.preventDefault(); const list = e.currentTarget; const type = list.dataset.type; const ids = Array.from(list.children).map(li => li.dataset.id);
+  const reordered = ids.map(id => todos.find(t => t.id === id));
+  todos = todos.filter(t => t.type !== type).concat(reordered);
+  saveTasks(); refreshTasks();
 }
-
-function handleDrop(e) {
-  e.preventDefault();
-  const list = e.currentTarget;
-  const type = list.dataset.type;
-
-  const ids = Array.from(list.children).map(li => li.dataset.id);
-  const newOrder = ids.map(id => todos.find(todo => todo.id === id));
-  const others = todos.filter(todo => todo.type !== type);
-  todos = [...others, ...newOrder];
-
-  saveTasks();
-  refreshTasks();
-}
-
 function getDragAfterElement(container, y) {
-  const elements = [...container.querySelectorAll("li:not(.dragging)")];
-  return elements.reduce((closest, child) => {
-    const box = child.getBoundingClientRect();
-    const offset = y - box.top - box.height / 2;
-    if (offset < 0 && offset > closest.offset) {
-      return { offset, element: child };
-    } else {
-      return closest;
-    }
-  }, { offset: Number.NEGATIVE_INFINITY }).element;
+  return [...container.querySelectorAll('li:not(.dragging)')]
+    .reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      return (offset < 0 && offset > closest.offset) ? { offset, element: child } : closest;
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
-
-
-// 各リストにイベントリスナー追加
-["onetime", "daily", "weekly", "monthly"].forEach(type => {
-  const list = document.getElementById(`taskList-${type}`);
-  if (list) {
-    list.addEventListener("dragover", handleDragOver);
-    list.addEventListener("drop", handleDrop);
-  }
-});
 
 loadTasks();
