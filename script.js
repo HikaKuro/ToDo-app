@@ -3,7 +3,6 @@ const addBtn = document.getElementById("addBtn");
 const typeSelect = document.getElementById("taskType");
 
 let todos = [];
-let completedChart = null;
 
 function saveTasks() {
   localStorage.setItem("todos", JSON.stringify(todos));
