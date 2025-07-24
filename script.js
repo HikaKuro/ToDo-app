@@ -195,6 +195,9 @@ function refreshTasks() {
     completedChart.data.datasets[0].data = labels.map(d => counts[d]);
     completedChart.update();
   }
+
+  updateChart(todos);
+
 }
 
 function addTask(text, type) {
@@ -228,5 +231,11 @@ function getDragAfterElement(container, y) {
       return (offset < 0 && offset > closest.offset) ? { offset, element: child } : closest;
     }, { offset: Number.NEGATIVE_INFINITY }).element;
 }
+
+// script.js 内…
+window.addEventListener('DOMContentLoaded', () => {
+  initChart();
+  loadTasks();  // この中や refreshTasks() の末尾で updateChart(todos) を呼ぶ想定
+});
 
 loadTasks();
